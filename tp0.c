@@ -19,6 +19,7 @@ int main(void)
 
 	logger = iniciar_logger();
 
+	log_info(logger,"-----------LOG START--------");
 	//Loggear "soy un log"
 
 	config = leer_config();
@@ -27,32 +28,39 @@ int main(void)
 	/*---------------------------------------------------PARTE 3-------------------------------------------------------------*/
 
 	//antes de continuar, tenemos que asegurarnos que el servidor esté corriendo porque lo necesitaremos para lo que sigue.
+	ip = config_get_string_value(config,"IP");
+	puerto = config_get_string_value(config,"PUERTO");
+	log_info(logger,puerto);
+	log_info(logger,ip);
 
-	//crear conexion
+	int socket = crear_conexion(ip,puerto);
+	enviar_mensaje("hola",socket);
 
-	//enviar mensaje
+	char* mensaje = recibir_mensaje(socket);
 
-	//recibir mensaje
-
-	//loguear mensaje recibido
+	log_info(logger,mensaje);
+	
+	free(mensaje);
 
 	terminar_programa(conexion, logger, config);
 }
 
-//TODO
 t_log* iniciar_logger(void)
 {
-
+	t_log* logger = log_create("tp0.log","Prueba",true,LOG_LEVEL_INFO);
+	return logger;
 }
 
-//TODO
 t_config* leer_config(void)
 {
-
+	t_config* config = config_create("tp0.config");
+	return config;
 }
 
-//TODO
 void terminar_programa(int conexion, t_log* logger, t_config* config)
 {
-	//Y por ultimo, para cerrar, hay que liberar lo que utilizamos (conexion, log y config) con las funciones de las commons y del TP mencionadas en el enunciado
+	config_destroy(config);
+	log_info(logger,"-----------LOG END--------");
+	liberar_conexion(conexion);
+	log_destroy(logger);
 }
