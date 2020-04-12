@@ -10,7 +10,6 @@
 int main(void)
 {
 	/*---------------------------------------------------PARTE 2-------------------------------------------------------------*/
-	int conexion;
 	char* ip;
 	char* puerto;
 
@@ -34,15 +33,18 @@ int main(void)
 	log_info(logger,ip);
 
 	int socket = crear_conexion(ip,puerto);
+
+
 	enviar_mensaje("hola",socket);
+	puts("envia mensaje");
 
 	char* mensaje = recibir_mensaje(socket);
-
+	puts("recibe mensaje");
 	log_info(logger,mensaje);
 	
-	free(mensaje);
 
-	terminar_programa(conexion, logger, config);
+
+	terminar_programa(socket, logger, config);
 }
 
 t_log* iniciar_logger(void)

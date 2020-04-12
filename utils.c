@@ -14,14 +14,13 @@
 void* serializar_paquete(t_paquete* paquete, int *bytes)
 {
 
-	void* a_enviar = malloc (sizeof(paquete->codigo_operacion) + sizeof(paquete->buffer->size) + sizeof(paquete->buffer->stream));
+	void* a_enviar = malloc (2*sizeof(int) + sizeof(paquete->buffer->stream));
 
-
-	memcpy(a_enviar + *bytes, &paquete->codigo_operacion, sizeof(paquete->codigo_operacion));
-	*bytes += sizeof(paquete->codigo_operacion);
-	memcpy(a_enviar  + *bytes, &(paquete -> buffer -> size),sizeof(paquete -> buffer -> size));
-	*bytes += sizeof(paquete -> buffer -> size);
-	memcpy(a_enviar  + *bytes, &paquete -> buffer -> stream,paquete -> buffer -> size);
+	memcpy(a_enviar + *bytes, &paquete->codigo_operacion, sizeof(int));
+	*bytes += sizeof(int);
+	memcpy(a_enviar  + *bytes, &(paquete -> buffer -> size),sizeof(int));
+	*bytes += sizeof(int);
+	memcpy(a_enviar  + *bytes, paquete -> buffer -> stream,paquete -> buffer -> size);
 	*bytes += sizeof(paquete->buffer->size);
 
 	return a_enviar;
@@ -55,7 +54,7 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	paquete -> buffer = malloc(sizeof(t_buffer));
 	paquete-> buffer -> stream = malloc(paquete->buffer -> size);
 
-	paquete -> buffer -> size = strlen(mensaje)+1;
+	paquete -> buffer -> size = strlen(mensaje);
 	memcpy(paquete-> buffer -> stream, mensaje, paquete-> buffer -> size);
 	paquete -> codigo_operacion = MENSAJE;
 
@@ -66,6 +65,9 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	send(socket_cliente,a_enviar,bytes,0);
 
 	free(a_enviar);
+	free(paquete -> buffer -> stream);
+	free(paquete -> buffer);
+	free(paquete);
 
 
 }
@@ -73,17 +75,19 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 char* recibir_mensaje(int socket_cliente)
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
-	char* mensaje = "Mensaje vacio";
+	paquete->buffer = malloc(sizeof(t_buffer));
+
+	char* mensaje;
 
 	recv(socket_cliente,&(paquete -> codigo_operacion),sizeof(paquete -> codigo_operacion),0);
-
-	recv(socket_cliente,&(paquete -> buffer -> size),sizeof(uint32_t),0);
+	recv(socket_cliente,&(paquete -> buffer -> size),sizeof(paquete -> buffer -> size),0);
+	paquete->buffer->stream = malloc((paquete->buffer->size));
 	recv(socket_cliente,&(paquete -> buffer -> stream),paquete -> buffer -> size,0);
 
 	if(paquete -> codigo_operacion == MENSAJE)
 		mensaje = deserializar_mensaje(paquete -> buffer);
 
-	free(paquete -> buffer -> stream);
+
 	free(paquete -> buffer);
 	free(paquete);
 
@@ -91,9 +95,9 @@ char* recibir_mensaje(int socket_cliente)
 }
 
 char* deserializar_mensaje(t_buffer* buffer){
-	char* mensaje = malloc(buffer -> size);
-	void* stream = buffer -> stream;
-	memcpy(&(mensaje),stream,buffer -> size);
+	char* mensaje = malloc((buffer -> size));
+
+	memcpy(mensaje,&(buffer -> stream) ,buffer -> size);
 
 	return mensaje;
 }
