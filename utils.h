@@ -39,5 +39,6 @@ char* recibir_mensaje(int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
 char* deserializar_mensaje(t_buffer* buffer);
 void liberar_conexion(int socket_cliente);
+void* serializar_paquete(t_paquete* paquete, int* bytes);
 
 #endif /* UTILS_H_ */

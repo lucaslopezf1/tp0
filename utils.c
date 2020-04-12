@@ -13,13 +13,16 @@
  */
 void* serializar_paquete(t_paquete* paquete, int *bytes)
 {
-	void* a_enviar = malloc(paquete -> buffer -> size + sizeof(uint8_t));
-	
-	memcpy(a_enviar  + *bytes, &(paquete -> codigo_operacion),sizeof(int));
-	bytes += sizeof(int);
-	memcpy(a_enviar  + *bytes, &(paquete -> buffer -> size),sizeof(int));
-	bytes += sizeof(int);
-	memcpy(a_enviar  + *bytes, paquete -> buffer -> stream,paquete -> buffer -> size);
+
+	void* a_enviar = malloc (sizeof(paquete->codigo_operacion) + sizeof(paquete->buffer->size) + sizeof(paquete->buffer->stream));
+
+
+	memcpy(a_enviar + *bytes, &paquete->codigo_operacion, sizeof(paquete->codigo_operacion));
+	*bytes += sizeof(paquete->codigo_operacion);
+	memcpy(a_enviar  + *bytes, &(paquete -> buffer -> size),sizeof(paquete -> buffer -> size));
+	*bytes += sizeof(paquete -> buffer -> size);
+	memcpy(a_enviar  + *bytes, &paquete -> buffer -> stream,paquete -> buffer -> size);
+	*bytes += sizeof(paquete->buffer->size);
 
 	return a_enviar;
 }
@@ -48,27 +51,24 @@ int crear_conexion(char *ip, char* puerto)
 
 void enviar_mensaje(char* mensaje, int socket_cliente)
 {
-	t_buffer* buffer = malloc(sizeof(t_buffer));
-	buffer -> size = strlen(mensaje)+1;
-	int size = buffer -> size;
-	
-	void* stream_mensaje = malloc(buffer -> size);
-
-	memcpy(stream_mensaje,mensaje,buffer -> size);
-	buffer -> stream = stream_mensaje;
-
 	t_paquete* paquete = malloc(sizeof(t_paquete));
-	paquete -> codigo_operacion = MENSAJE;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete -> buffer = buffer;
-	
-	free(stream_mensaje);
+	paquete -> buffer = malloc(sizeof(t_buffer));
+	paquete-> buffer -> stream = malloc(paquete->buffer -> size);
 
-	int* bytes = 0;
+	paquete -> buffer -> size = strlen(mensaje)+1;
+	memcpy(paquete-> buffer -> stream, mensaje, paquete-> buffer -> size);
+	paquete -> codigo_operacion = MENSAJE;
+
+	int bytes = 0;
 	
-	void* a_enviar = serializar_paquete(paquete,&(bytes));
+	void* a_enviar = serializar_paquete( paquete, &(bytes));
+
 	send(socket_cliente,a_enviar,bytes,0);
 	free(a_enviar);
+	free(paquete-> buffer -> stream);
+	free(paquete -> buffer);
+	free(paquete);
+
 }
 
 char* recibir_mensaje(int socket_cliente)
